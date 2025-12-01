@@ -11,9 +11,10 @@ interface LinkModalProps {
   categories: Category[];
   initialData?: LinkItem;
   aiConfig: AIConfig;
+  defaultCategoryId?: string;
 }
 
-const LinkModal: React.FC<LinkModalProps> = ({ isOpen, onClose, onSave, onDelete, categories, initialData, aiConfig }) => {
+const LinkModal: React.FC<LinkModalProps> = ({ isOpen, onClose, onSave, onDelete, categories, initialData, aiConfig, defaultCategoryId }) => {
   const [title, setTitle] = useState('');
   const [url, setUrl] = useState('');
   const [description, setDescription] = useState('');
@@ -22,6 +23,7 @@ const LinkModal: React.FC<LinkModalProps> = ({ isOpen, onClose, onSave, onDelete
   const [icon, setIcon] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isFetchingIcon, setIsFetchingIcon] = useState(false);
+  const [autoFetchIcon, setAutoFetchIcon] = useState(true);
 
   useEffect(() => {
     if (isOpen) {
@@ -36,12 +38,25 @@ const LinkModal: React.FC<LinkModalProps> = ({ isOpen, onClose, onSave, onDelete
         setTitle('');
         setUrl('');
         setDescription('');
-        setCategoryId(categories[0]?.id || 'common');
+        // 如果有默认分类ID且该分类存在，则使用默认分类，否则使用第一个分类
+        const defaultCategory = defaultCategoryId && categories.find(cat => cat.id === defaultCategoryId);
+        setCategoryId(defaultCategory ? defaultCategoryId : (categories[0]?.id || 'common'));
         setPinned(false);
         setIcon('');
       }
     }
-  }, [isOpen, initialData, categories]);
+  }, [isOpen, initialData, categories, defaultCategoryId]);
+
+  // 当URL变化且启用自动获取图标时，自动获取图标
+  useEffect(() => {
+    if (url && autoFetchIcon && !initialData) {
+      const timer = setTimeout(() => {
+        handleFetchIcon();
+      }, 500); // 延迟500ms执行，避免频繁请求
+      
+      return () => clearTimeout(timer);
+    }
+  }, [url, autoFetchIcon, initialData]);
 
   const handleDelete = () => {
     if (!initialData) return;
@@ -199,8 +214,20 @@ const LinkModal: React.FC<LinkModalProps> = ({ isOpen, onClose, onSave, onDelete
                 ) : (
                   <Wand2 className="w-4 h-4" />
                 )}
-                自动获取图标
+                获取图标
               </button>
+            </div>
+            <div className="flex items-center gap-2 mt-2">
+              <input
+                type="checkbox"
+                id="autoFetchIcon"
+                checked={autoFetchIcon}
+                onChange={(e) => setAutoFetchIcon(e.target.checked)}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-300 rounded dark:border-slate-600 dark:bg-slate-700"
+              />
+              <label htmlFor="autoFetchIcon" className="text-sm text-slate-700 dark:text-slate-300">
+                自动获取URL链接的图标
+              </label>
             </div>
           </div>
 

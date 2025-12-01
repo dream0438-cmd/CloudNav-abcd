@@ -112,7 +112,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   "permissions": ["activeTab"],
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Save to CloudNav"
+    "default_title": "保存到CloudNav"
   }
 }`;
 
@@ -134,17 +134,17 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   </style>
 </head>
 <body>
-  <h3>Save to CloudNav</h3>
+  <h3>保存到CloudNav</h3>
   
-  <label>Title</label>
-  <input type="text" id="title" placeholder="Website Title">
+  <label>标题</label>
+  <input type="text" id="title" placeholder="网站标题">
   
-  <label>Category</label>
+  <label>分类</label>
   <select id="category">
-    <option value="" disabled selected>Loading categories...</option>
+    <option value="" disabled selected>加载分类中...</option>
   </select>
   
-  <button id="saveBtn">Save Bookmark</button>
+  <button id="saveBtn">保存书签</button>
   <div id="status"></div>
   
   <script src="popup.js"></script>
@@ -214,7 +214,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!currentTabUrl) return;
 
     saveBtn.disabled = true;
-    saveBtn.textContent = 'Saving...';
+    saveBtn.textContent = '保存中...';
     statusDiv.textContent = '';
 
     try {
@@ -232,17 +232,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
 
       if (res.ok) {
-        statusDiv.textContent = 'Saved successfully!';
+        statusDiv.textContent = '保存成功！';
         statusDiv.className = 'success';
         setTimeout(() => window.close(), 1200);
       } else {
         throw new Error(res.statusText);
       }
     } catch (e) {
-      statusDiv.textContent = 'Save failed: ' + e.message;
+      statusDiv.textContent = '保存失败：' + e.message;
       statusDiv.className = 'error';
       saveBtn.disabled = false;
-      saveBtn.textContent = 'Save Bookmark';
+      saveBtn.textContent = '保存书签';
     }
   });
 });`;

@@ -116,7 +116,7 @@ const BackupModal: React.FC<BackupModalProps> = ({
             {/* Section 1: WebDAV Configuration */}
             <section className="space-y-4">
                 <div className="flex items-center justify-between">
-                    <h4 className="font-medium text-slate-800 dark:text-slate-200">WebDAV 设置 (坚果云/Nextcloud等)</h4>
+                    <h4 className="font-medium text-slate-800 dark:text-slate-200">WebDAV 设置 (坚果云/<a href="https://infini-cloud.net/en/modules/mypage/usage/" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-600 underline">InfiniCloud</a>等)</h4>
                     <label className="flex items-center gap-2 cursor-pointer">
                         <input 
                             type="checkbox" 

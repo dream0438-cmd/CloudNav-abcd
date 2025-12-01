@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   Search, Plus, Upload, Moon, Sun, Menu, 
   Trash2, Edit2, Loader2, Cloud, CheckCircle2, AlertCircle,
-  Pin, Settings, Lock, CloudCog, Github, GitFork, GripVertical, Save
+  Pin, Settings, Lock, CloudCog, Github, GitFork, GripVertical, Save, CheckSquare, LogOut
 } from 'lucide-react';
 import {
   DndContext,
@@ -368,6 +368,19 @@ function App() {
     setIsBatchEditMode(false);
   };
 
+  const handleSelectAll = () => {
+    // 获取当前显示的所有链接ID
+    const currentLinkIds = displayedLinks.map(link => link.id);
+    
+    // 如果已选中的链接数量等于当前显示的链接数量，则取消全选
+    if (selectedLinks.size === currentLinkIds.length && currentLinkIds.every(id => selectedLinks.has(id))) {
+      setSelectedLinks(new Set());
+    } else {
+      // 否则全选当前显示的所有链接
+      setSelectedLinks(new Set(currentLinkIds));
+    }
+  };
+
   // --- Actions ---
 
   const handleLogin = async (password: string): Promise<boolean> => {
@@ -418,6 +431,14 @@ function App() {
       } catch (e) {
           return false;
       }
+  };
+
+  const handleLogout = () => {
+      setAuthToken(null);
+      localStorage.removeItem(AUTH_KEY);
+      setSyncStatus('offline');
+      // 退出后重新加载本地数据
+      loadFromLocal();
   };
 
   const handleImportConfirm = (newLinks: LinkItem[], newCategories: Category[]) => {
@@ -827,7 +848,7 @@ function App() {
       <div
         ref={setNodeRef}
         style={style}
-        className={`group relative flex items-center gap-3 p-3 rounded-xl border shadow-sm transition-all duration-200 cursor-grab active:cursor-grabbing ${
+        className={`group relative flex items-center gap-3 p-3 rounded-xl border shadow-sm transition-all duration-200 cursor-grab active:cursor-grabbing min-w-0 max-w-full overflow-hidden ${
           isSortingMode || isSortingPinned
             ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800' 
             : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700/50'
@@ -836,15 +857,15 @@ function App() {
         {...listeners}
       >
         {/* 链接内容 - 移除a标签，改为div防止点击跳转 */}
-        <div className="flex items-center gap-3 flex-1">
+        <div className="flex items-center gap-3 flex-1 min-w-0 overflow-hidden">
           {/* Compact Icon */}
           <div className="w-8 h-8 rounded-lg bg-slate-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 flex items-center justify-center text-sm font-bold uppercase shrink-0">
               {link.icon ? <img src={link.icon} alt="" className="w-5 h-5"/> : link.title.charAt(0)}
           </div>
           
           {/* Text Content - 移除描述文字 */}
-          <div className="flex-1 min-w-0">
-              <h3 className="font-medium text-sm text-slate-800 dark:text-slate-200 truncate">
+          <div className="flex-1 min-w-0 overflow-hidden">
+              <h3 className="font-medium text-sm text-slate-800 dark:text-slate-200 truncate whitespace-nowrap overflow-hidden text-ellipsis" title={link.title}>
                   {link.title}
               </h3>
           </div>
@@ -868,15 +889,15 @@ function App() {
       >
         {/* 链接内容 - 在批量编辑模式下不使用a标签 */}
         {isBatchEditMode ? (
-          <div className="flex items-center gap-3 flex-1">
+          <div className="flex items-center gap-3 flex-1 min-w-0 overflow-hidden">
             {/* Compact Icon */}
             <div className="w-8 h-8 rounded-lg bg-slate-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 flex items-center justify-center text-sm font-bold uppercase shrink-0">
                 {link.icon ? <img src={link.icon} alt="" className="w-5 h-5"/> : link.title.charAt(0)}
             </div>
             
             {/* Text Content */}
-            <div className="flex-1 min-w-0">
-                <h3 className="font-medium text-sm text-slate-800 dark:text-slate-200 truncate">
+            <div className="flex-1 min-w-0 overflow-hidden">
+                <h3 className="font-medium text-sm text-slate-800 dark:text-slate-200 truncate whitespace-nowrap overflow-hidden text-ellipsis" title={link.title}>
                     {link.title}
                 </h3>
             </div>
@@ -886,7 +907,7 @@ function App() {
             href={link.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-3 flex-1"
+            className="flex items-center gap-3 flex-1 min-w-0 overflow-hidden"
             title={link.description || link.url} // Native tooltip fallback
           >
             {/* Compact Icon */}
@@ -895,8 +916,8 @@ function App() {
             </div>
             
             {/* Text Content */}
-            <div className="flex-1 min-w-0">
-                <h3 className="font-medium text-sm text-slate-800 dark:text-slate-200 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+            <div className="flex-1 min-w-0 overflow-hidden">
+                <h3 className="font-medium text-sm text-slate-800 dark:text-slate-200 truncate whitespace-nowrap overflow-hidden text-ellipsis group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" title={link.title}>
                     {link.title}
                 </h3>
                 {link.description && (
@@ -1147,9 +1168,13 @@ function App() {
               {darkMode ? <Sun size={18} /> : <Moon size={18} />}
             </button>
 
-            {!authToken && (
+            {!authToken ? (
                 <button onClick={() => setIsAuthOpen(true)} className="hidden sm:flex items-center gap-2 bg-slate-200 dark:bg-slate-700 px-3 py-1.5 rounded-full text-xs font-medium">
                     <Cloud size={14} /> 登录
+                </button>
+            ) : (
+                <button onClick={handleLogout} className="hidden sm:flex items-center gap-2 bg-slate-200 dark:bg-slate-700 px-3 py-1.5 rounded-full text-xs font-medium">
+                    <LogOut size={14} /> 退出
                 </button>
             )}
 
@@ -1187,7 +1212,7 @@ function App() {
                                 </button>
                                 <button 
                                     onClick={cancelPinnedSorting}
-                                    className="px-3 py-1.5 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-medium rounded-full hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
+                                    className="px-3 py-1.5 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-medium rounded-full hover:bg-slate-300 dark:hover:bg-slate-600 transition-all"
                                     title="取消排序"
                                 >
                                     取消
@@ -1252,6 +1277,9 @@ function App() {
                                 <>
                                     {categories.find(c => c.id === selectedCategory)?.name}
                                     {isCategoryLocked(selectedCategory) && <Lock size={14} className="text-amber-500" />}
+                                    <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 rounded-full">
+                                        {displayedLinks.length}
+                                    </span>
                                 </>
                             )
                          }
@@ -1269,7 +1297,7 @@ function App() {
                                  </button>
                                  <button 
                                      onClick={cancelSorting}
-                                     className="px-3 py-1.5 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-medium rounded-full hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
+                                     className="px-3 py-1.5 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-medium rounded-full hover:bg-slate-300 dark:hover:bg-slate-600 transition-all"
                                      title="取消排序"
                                  >
                                      取消
@@ -1297,6 +1325,14 @@ function App() {
                                          >
                                              <Trash2 size={14} />
                                              <span>批量删除</span>
+                                         </button>
+                                         <button 
+                                             onClick={handleSelectAll}
+                                             className="flex items-center gap-1 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded-full transition-colors"
+                                             title="全选/取消全选"
+                                         >
+                                             <CheckSquare size={14} />
+                                             <span>{selectedLinks.size === displayedLinks.length ? '取消全选' : '全选'}</span>
                                          </button>
                                          <div className="relative group">
                                               <button 
@@ -1389,6 +1425,7 @@ function App() {
             categories={categories}
             initialData={editingLink || (prefillLink as LinkItem)}
             aiConfig={aiConfig}
+            defaultCategoryId={selectedCategory !== 'all' ? selectedCategory : undefined}
           />
         </>
       )}
@@ -1397,3 +1434,4 @@ function App() {
 }
 
 export default App;
+
